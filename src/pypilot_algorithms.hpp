@@ -3,6 +3,7 @@
 #include "pypilot_algorithms/angles.hpp"
 #include "pypilot_algorithms/filters.hpp"
 #include "pypilot_algorithms/pypilot_filters.hpp"
+#include "pypilot_algorithms/mode_state.hpp"
 #include "pypilot_algorithms/control.hpp"
 #include "pypilot_algorithms/basic_pilot.hpp"
 #include "pypilot_algorithms/absolute_pilot.hpp"
