@@ -32,6 +32,10 @@ int main() {
     gains.P = 10.0f;
     out = compute_wind_pilot(input, gains, 1.0f);
     assert(out.command_norm == -1.0f);
+    out = compute_wind_pilot(input, gains, CommandClamp::raw);
+    assert(out.command_norm < -1.0f);
+    out = compute_wind_pilot_raw(input, gains);
+    assert(out.command_norm < -1.0f);
 
     return 0;
 }
