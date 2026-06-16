@@ -10,6 +10,10 @@ int main() {
     assert(nearf(pypilot_lowpass(0.2f, 10.0f, 0.0f), 2.0f));
     assert(nearf(pypilot_heading_filter(0.2f, 350.0f, 10.0f), 6.0f));
     assert(nearf(pypilot_heading_filter(0.2f, 10.0f, 350.0f), 354.0f));
+    assert(nearf(pypilot_heading_offset_filter(170.0f, -170.0f, 0.5f), -180.0f));
+    assert(nearf(pypilot_gps_speed_filter(0.0f, 10.0f), 0.02f));
+    assert(nearf(pypilot_gps_heading_offset_measurement(100.0f, 80.0f), 20.0f));
+    assert(nearf(pypilot_wind_heading_offset_measurement(-20.0f, 80.0f), 60.0f));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, false), 20.0f));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, true), -20.0f));
     assert(nearf(pypilot_heading_error(200.0f, 80.0f, false), 30.0f));
