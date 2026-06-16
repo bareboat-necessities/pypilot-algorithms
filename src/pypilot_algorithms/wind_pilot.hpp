@@ -31,15 +31,30 @@ struct WindPilotOutput {
 
 template<typename Real = float>
 inline WindPilotOutput<Real> compute_wind_pilot(const WindPilotInput<Real>& in,
-                                                 const WindPilotGains<Real>& gains,
-                                                 Real command_limit = Real(1)) {
+                                                const WindPilotGains<Real>& gains,
+                                                CommandClamp clamp_mode,
+                                                Real command_limit = Real(1)) {
     WindPilotOutput<Real> out;
     out.Pgain = gains.P * in.wind_error_deg;
     out.Dgain = gains.D * in.headingrate_deg_s;
     out.DDgain = gains.DD * in.headingraterate_deg_s2;
     out.WGgain = gains.WG * in.wind_gust_kn;
-    out.command_norm = clamp_command(out.Pgain + out.Dgain + out.DDgain + out.WGgain, command_limit);
+    Real command = out.Pgain + out.Dgain + out.DDgain + out.WGgain;
+    out.command_norm = apply_command_clamp(command, clamp_mode, command_limit);
     return out;
+}
+
+template<typename Real = float>
+inline WindPilotOutput<Real> compute_wind_pilot(const WindPilotInput<Real>& in,
+                                                const WindPilotGains<Real>& gains,
+                                                Real command_limit = Real(1)) {
+    return compute_wind_pilot(in, gains, CommandClamp::clamped, command_limit);
+}
+
+template<typename Real = float>
+inline WindPilotOutput<Real> compute_wind_pilot_raw(const WindPilotInput<Real>& in,
+                                                    const WindPilotGains<Real>& gains) {
+    return compute_wind_pilot(in, gains, CommandClamp::raw);
 }
 
 } // namespace pypilot_algorithms
