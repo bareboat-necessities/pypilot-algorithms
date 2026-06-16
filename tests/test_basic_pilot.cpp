@@ -35,6 +35,10 @@ int main() {
     gains.P = 1.0f;
     out = compute_basic_pilot(input, gains, 1.0f);
     assert(out.command_norm == 1.0f);
+    out = compute_basic_pilot(input, gains, CommandClamp::raw);
+    assert(out.command_norm > 1000.0f);
+    out = compute_basic_pilot_raw(input, gains);
+    assert(out.command_norm > 1000.0f);
 
     return 0;
 }
