@@ -189,8 +189,8 @@ inline Real pypilot_heading_error_integral(Real previous_integral_deg,
                                            Real heading_error_deg,
                                            Real dt_s,
                                            Real limit_deg = Real(10)) {
-    if (dt_s < Real(0)) {
-        dt_s = Real(0);
+    if (dt_s <= Real(0)) {
+        return Real(0);
     }
     if (dt_s > Real(1)) {
         dt_s = Real(1);
