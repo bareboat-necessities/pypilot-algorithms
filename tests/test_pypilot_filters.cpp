@@ -32,6 +32,7 @@ int main() {
     assert(nearf(pypilot_heading_command_rate(0.0f, 100.0f, 90.0f, false), -1.0f));
     assert(nearf(pypilot_heading_command_rate(0.0f, 100.0f, 90.0f, true), 1.0f));
     assert(nearf(pypilot_heading_error_integral(0.0f, 25.0f, 2.0f), 0.5f));
+    assert(nearf(pypilot_heading_error_integral(5.0f, 25.0f, 0.0f), 0.0f));
     assert(nearf(pypilot_decay_integral_by_command_rate(5.0f, 1.0f), 2.0f));
     assert(nearf(pypilot_decay_integral_by_command_rate(-5.0f, 1.0f), -2.0f));
     return 0;
