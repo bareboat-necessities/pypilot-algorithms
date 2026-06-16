@@ -14,6 +14,14 @@ int main() {
     assert(nearf(pypilot_gps_speed_filter(0.0f, 10.0f), 0.02f));
     assert(nearf(pypilot_gps_heading_offset_measurement(100.0f, 80.0f), 20.0f));
     assert(nearf(pypilot_wind_heading_offset_measurement(-20.0f, 80.0f), 60.0f));
+    assert(nearf(pypilot_wind_filtered_speed(0.0f, 10.0f), 0.1f));
+    float wf = pypilot_wind_filter_factor(0.1f, 10.0f);
+    assert(wf > 0.0f);
+    assert(nearf(pypilot_wind_filtered_direction(10.0f, true, 350.0f, 0.2f), 6.0f));
+    assert(nearf(pypilot_true_wind_speed(5.0f, 10.0f, 0.0f), 5.0f));
+    assert(nearf(pypilot_true_wind_direction(5.0f, 10.0f, 0.0f), 0.0f));
+    assert(nearf(pypilot_leeway_deg(10.0f, 5.0f), 2.0f));
+    assert(pypilot_source_is_stale(9000001ULL, 1ULL));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, false), 20.0f));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, true), -20.0f));
     assert(nearf(pypilot_heading_error(200.0f, 80.0f, false), 30.0f));
