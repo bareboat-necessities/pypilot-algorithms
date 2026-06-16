@@ -30,6 +30,58 @@ inline Real pypilot_heading_filter(Real alpha, Real sample_deg, Real previous_de
     return result;
 }
 
+
+template<typename Real = float>
+inline Real pypilot_resolv_to(Real angle_deg, Real offset_deg) {
+    while (offset_deg - angle_deg > Real(180)) {
+        angle_deg += Real(360);
+    }
+    while (offset_deg - angle_deg <= Real(-180)) {
+        angle_deg -= Real(360);
+    }
+    return angle_deg;
+}
+
+template<typename Real = float>
+inline Real pypilot_resolv(Real angle_deg) {
+    return pypilot_resolv_to(angle_deg, Real(0));
+}
+
+template<typename Real = float>
+inline Real pypilot_heading_offset_filter(Real current_offset_deg,
+                                          Real measured_offset_deg,
+                                          Real alpha) {
+    alpha = clamp(alpha, Real(0), Real(1));
+    Real resolved_measured = pypilot_resolv_to(measured_offset_deg, current_offset_deg);
+    return pypilot_resolv(alpha * resolved_measured + (Real(1) - alpha) * current_offset_deg);
+}
+
+template<typename Real = float>
+inline Real pypilot_gps_speed_filter(Real previous_speed_kn,
+                                     Real gps_speed_kn,
+                                     Real alpha = Real(0.002)) {
+    return pypilot_lowpass(alpha, gps_speed_kn, previous_speed_kn);
+}
+
+template<typename Real = float>
+inline Real pypilot_gps_heading_offset_alpha(Real smoothed_gps_speed_kn) {
+    if (smoothed_gps_speed_kn < Real(0)) {
+        smoothed_gps_speed_kn = Real(0);
+    }
+    return Real(0.005) * static_cast<Real>(log(smoothed_gps_speed_kn + Real(1)));
+}
+
+template<typename Real = float>
+inline Real pypilot_gps_heading_offset_measurement(Real gps_track_deg, Real compass_heading_deg) {
+    return gps_track_deg - compass_heading_deg;
+}
+
+template<typename Real = float>
+inline Real pypilot_wind_heading_offset_measurement(Real filtered_wind_direction_deg,
+                                                    Real compass_heading_deg) {
+    return filtered_wind_direction_deg + compass_heading_deg;
+}
+
 template<typename Real = float>
 inline Real pypilot_heading_error(Real heading_deg,
                                   Real heading_command_deg,
