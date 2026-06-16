@@ -4,6 +4,7 @@
 #include "pypilot_algorithms/filters.hpp"
 #include "pypilot_algorithms/pypilot_filters.hpp"
 #include "pypilot_algorithms/source.hpp"
+#include "pypilot_algorithms/servo_rudder.hpp"
 #include "pypilot_algorithms/mode_state.hpp"
 #include "pypilot_algorithms/tack.hpp"
 #include "pypilot_algorithms/control.hpp"
