@@ -58,6 +58,16 @@ inline Real pypilot_heading_offset_filter(Real current_offset_deg,
 }
 
 template<typename Real = float>
+inline Real pypilot_heading_offset_align_or_filter(bool has_current_offset,
+                                                   Real current_offset_deg,
+                                                   Real measured_offset_deg,
+                                                   Real alpha) {
+    return has_current_offset
+               ? pypilot_heading_offset_filter(current_offset_deg, measured_offset_deg, alpha)
+               : pypilot_resolv(measured_offset_deg);
+}
+
+template<typename Real = float>
 inline Real pypilot_gps_speed_filter(Real previous_speed_kn,
                                      Real gps_speed_kn,
                                      Real alpha = Real(0.002)) {
@@ -146,7 +156,10 @@ inline Real pypilot_leeway_deg(Real heel_deg,
 inline bool pypilot_source_is_stale(uint64_t now_us,
                                     uint64_t last_update_us,
                                     uint64_t timeout_us = 8000000ULL) {
-    return last_update_us != 0 && now_us > last_update_us + timeout_us;
+    if (last_update_us == 0) {
+        return true;
+    }
+    return now_us >= last_update_us && (now_us - last_update_us) > timeout_us;
 }
 
 template<typename Real = float>
