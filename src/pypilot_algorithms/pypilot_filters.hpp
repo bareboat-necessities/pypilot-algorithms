@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include "angles.hpp"
 #include "control.hpp"
 
@@ -80,6 +81,72 @@ template<typename Real = float>
 inline Real pypilot_wind_heading_offset_measurement(Real filtered_wind_direction_deg,
                                                     Real compass_heading_deg) {
     return filtered_wind_direction_deg + compass_heading_deg;
+}
+
+
+template<typename Real = float>
+inline Real pypilot_wind_filtered_speed(Real previous_filtered_speed_kn,
+                                        Real speed_kn,
+                                        Real alpha = Real(0.01)) {
+    return pypilot_lowpass(alpha, speed_kn, previous_filtered_speed_kn);
+}
+
+template<typename Real = float>
+inline Real pypilot_wind_filter_factor(Real filter_constant,
+                                       Real filtered_speed_kn) {
+    return filter_constant * static_cast<Real>(log(filtered_speed_kn / Real(5) + Real(1.1)));
+}
+
+template<typename Real = float>
+inline Real pypilot_wind_filtered_direction(Real previous_filtered_direction_deg,
+                                            bool has_previous_filtered_direction,
+                                            Real direction_deg,
+                                            Real filter_factor) {
+    Real direction = has_previous_filtered_direction
+                         ? pypilot_resolv_to(direction_deg, previous_filtered_direction_deg)
+                         : pypilot_resolv(direction_deg);
+    if (!has_previous_filtered_direction) {
+        return direction;
+    }
+    return pypilot_resolv((Real(1) - filter_factor) * previous_filtered_direction_deg +
+                          filter_factor * direction);
+}
+
+template<typename Real = float>
+inline Real pypilot_true_wind_direction(Real boat_speed_kn,
+                                        Real apparent_wind_speed_kn,
+                                        Real apparent_wind_direction_deg) {
+    Real radians = apparent_wind_direction_deg * Real(3.14159265358979323846 / 180.0);
+    Real vx = apparent_wind_speed_kn * static_cast<Real>(sin(radians));
+    Real vy = apparent_wind_speed_kn * static_cast<Real>(cos(radians)) - boat_speed_kn;
+    return pypilot_resolv(static_cast<Real>(atan2(vx, vy) * Real(180.0 / 3.14159265358979323846)));
+}
+
+template<typename Real = float>
+inline Real pypilot_true_wind_speed(Real boat_speed_kn,
+                                    Real apparent_wind_speed_kn,
+                                    Real apparent_wind_direction_deg) {
+    Real radians = apparent_wind_direction_deg * Real(3.14159265358979323846 / 180.0);
+    Real vx = apparent_wind_speed_kn * static_cast<Real>(sin(radians));
+    Real vy = apparent_wind_speed_kn * static_cast<Real>(cos(radians)) - boat_speed_kn;
+    return static_cast<Real>(sqrt(vx * vx + vy * vy));
+}
+
+template<typename Real = float>
+inline Real pypilot_leeway_deg(Real heel_deg,
+                               Real water_speed_kn,
+                               Real coefficient = Real(5)) {
+    Real speed2 = water_speed_kn * water_speed_kn;
+    if (speed2 <= Real(2)) {
+        return Real(0);
+    }
+    return coefficient * heel_deg / speed2;
+}
+
+inline bool pypilot_source_is_stale(uint64_t now_us,
+                                    uint64_t last_update_us,
+                                    uint64_t timeout_us = 8000000ULL) {
+    return last_update_us != 0 && now_us > last_update_us + timeout_us;
 }
 
 template<typename Real = float>
