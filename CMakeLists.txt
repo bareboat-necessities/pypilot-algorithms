@@ -15,7 +15,8 @@ endif()
 
 if(PYPILOT_ALGORITHMS_BUILD_TESTS)
   enable_testing()
-  foreach(test_name test_angles test_filters test_basic_pilot test_wind_pilot)
+  foreach(test_name test_angles test_filters test_basic_pilot test_wind_pilot
+      test_more_pilots)
     add_executable(${test_name} tests/${test_name}.cpp)
     target_link_libraries(${test_name} PRIVATE pypilot_algorithms)
     add_test(NAME ${test_name} COMMAND ${test_name})
