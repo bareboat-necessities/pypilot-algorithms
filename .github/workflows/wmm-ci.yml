@@ -14,7 +14,9 @@ jobs:
       - name: Build
         run: cmake --build build
       - name: Test
-        run: ctest --test-dir build --output-on-failure --verbose
+        run: ctest --test-dir build --output-on-failure
+      - name: Print GPSFilter trajectory RMS
+        run: ./build/test_gps_filter_trajectory
 
   arduino-wmm:
     runs-on: ubuntu-latest
