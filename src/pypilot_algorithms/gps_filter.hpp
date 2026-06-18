@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <pypilot_syslib.hpp>
 #include "gps_math.hpp"
 
 namespace pypilot_algorithms {
@@ -53,10 +54,13 @@ public:
     GpsFilter2D()
         : initialized_(false), has_origin_(false), predict_time_s_(Real(0)),
           gps_system_time_offset_s_(Real(0)), gps_time_offset_s_(Real(0.7)),
-          stale_count_(0), history_count_(0), history_next_(0) {
+          stale_count_(0), history_count_(0), history_next_(0), logger_(0) {
         set_default_noise();
         reset();
     }
+
+    void set_logger(pypilot_syslib::Logger* logger) { logger_ = logger; }
+    pypilot_syslib::Logger* logger() const { return logger_; }
 
     void reset() {
         initialized_ = false;
@@ -70,6 +74,7 @@ public:
             }
         }
         output_ = GpsFilterOutput<Real>();
+        log_reset();
     }
 
     bool initialized() const { return initialized_; }
@@ -83,6 +88,7 @@ public:
         predict_time_s_ = prediction.time_s;
 
         if (dt_raw < Real(0) || dt_raw > Real(0.5)) {
+            log_prediction_reset(dt_raw);
             reset();
             return false;
         }
@@ -166,6 +172,25 @@ private:
     unsigned history_count_;
     unsigned history_next_;
     GpsFilterOutput<Real> output_;
+    pypilot_syslib::Logger* logger_;
+
+    void log_reset() const {
+        pypilot_syslib::log_if(logger_, 0ULL,
+                               pypilot_syslib::LogLevel::Info,
+                               pypilot_syslib::LogModule::Algorithms,
+                               pypilot_syslib::LogEvent::GpsFilterReset,
+                               "gps filter reset");
+    }
+
+    void log_prediction_reset(Real dt_raw) const {
+        pypilot_syslib::log_if(logger_, 0ULL,
+                               pypilot_syslib::LogLevel::Warn,
+                               pypilot_syslib::LogModule::Algorithms,
+                               pypilot_syslib::LogEvent::GpsFilterPredictionReset,
+                               "gps filter prediction reset",
+                               0,
+                               static_cast<float>(dt_raw));
+    }
 
     void set_default_noise() {
         const Real pos_sigma = Real(10);
