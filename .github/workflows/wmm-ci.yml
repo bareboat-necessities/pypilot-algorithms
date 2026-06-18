@@ -1,0 +1,32 @@
+name: WMM
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-wmm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure WMM tests
+        run: cmake -S . -B build -DPYPILOT_ALGORITHMS_ENABLE_WMM=ON
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  arduino-wmm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Install AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+      - name: Compile WMM example for Mega
+        run: |
+          arduino-cli compile --fqbn arduino:avr:mega \
+            --libraries "$PWD" \
+            "$PWD/examples/arduino/WmmDeclinationExample"
