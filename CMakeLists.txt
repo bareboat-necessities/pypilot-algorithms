@@ -14,9 +14,7 @@ if(PYPILOT_ALGORITHMS_ENABLE_WMM)
     extras/wmm_tinier/wmm_core.c
     extras/wmm_tinier/WMM_COF.c)
   target_include_directories(pypilot_algorithms_wmm PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/extras/wmm_tinier)
-  target_link_libraries(pypilot_algorithms_wmm PUBLIC pypilot_algorithms)
   if(UNIX)
     target_link_libraries(pypilot_algorithms_wmm PUBLIC m)
   endif()
@@ -36,7 +34,7 @@ if(PYPILOT_ALGORITHMS_BUILD_TESTS)
   endforeach()
   if(PYPILOT_ALGORITHMS_ENABLE_WMM)
     add_executable(test_wmm tests/test_wmm.cpp)
-    target_link_libraries(test_wmm PRIVATE pypilot_algorithms_wmm)
+    target_link_libraries(test_wmm PRIVATE pypilot_algorithms pypilot_algorithms_wmm)
     add_test(NAME test_wmm COMMAND test_wmm)
   endif()
 endif()
