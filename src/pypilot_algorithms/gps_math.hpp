@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <math.h>
 
 namespace pypilot_algorithms {
 namespace gps {
@@ -32,7 +32,7 @@ inline GpsXY<Real> ll_to_xy(Real latitude_deg,
                             Real longitude_deg,
                             Real origin_latitude_deg,
                             Real origin_longitude_deg) {
-    const Real cs = std::cos(origin_latitude_deg * Real(3.14159265358979323846 / 180.0));
+    const Real cs = Real(cos(origin_latitude_deg * Real(3.14159265358979323846 / 180.0)));
     const Real yc = latitude_deg - origin_latitude_deg;
     const Real xc = wrap_180_degrees(longitude_deg - origin_longitude_deg);
     GpsXY<Real> out;
@@ -46,7 +46,7 @@ inline GpsLatLon<Real> xy_to_ll(Real x_m,
                                 Real y_m,
                                 Real origin_latitude_deg,
                                 Real origin_longitude_deg) {
-    const Real cs = std::cos(origin_latitude_deg * Real(3.14159265358979323846 / 180.0));
+    const Real cs = Real(cos(origin_latitude_deg * Real(3.14159265358979323846 / 180.0)));
     GpsLatLon<Real> out;
     out.latitude_deg = y_m / Real(earth_m_per_degree) + origin_latitude_deg;
     out.longitude_deg = x_m / Real(earth_m_per_degree) / cs + origin_longitude_deg;
