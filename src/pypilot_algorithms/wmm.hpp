@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <pypilot_syslib.hpp>
 
 extern "C" {
 #include "../../extras/wmm_tinier/wmm.h"
@@ -65,7 +66,10 @@ inline float normalize_longitude(float lon) {
 
 class WorldMagneticModel {
 public:
-    WorldMagneticModel() : initialized_(false) {}
+    WorldMagneticModel() : initialized_(false), logger_(0) {}
+
+    void set_logger(pypilot_syslib::Logger* logger) { logger_ = logger; }
+    pypilot_syslib::Logger* logger() const { return logger_; }
 
     bool begin() {
         if (!initialized_) {
@@ -77,7 +81,10 @@ public:
 
     MagneticResult evaluate(const Position& position, const Date& date) {
         MagneticResult result;
-        if (!valid_position(position) || !valid_date(date)) return result;
+        if (!valid_position(position) || !valid_date(date)) {
+            log_invalid(0);
+            return result;
+        }
 
         begin();
         const uint8_t yy = uint8_t(date.year - 2000);
@@ -86,6 +93,7 @@ public:
         E0000(position.latitude_deg, normalize_longitude(position.longitude_deg), model_date, &declination);
         result.valid = isfinite(declination) != 0;
         result.declination_deg = declination;
+        if (!result.valid) log_invalid(1);
         return result;
     }
 
@@ -102,7 +110,17 @@ public:
     }
 
 private:
+    void log_invalid(int32_t code) const {
+        pypilot_syslib::log_if(logger_, 0ULL,
+                               pypilot_syslib::LogLevel::Warn,
+                               pypilot_syslib::LogModule::Algorithms,
+                               pypilot_syslib::LogEvent::WmmEvaluationInvalid,
+                               "wmm evaluation invalid",
+                               code);
+    }
+
     bool initialized_;
+    pypilot_syslib::Logger* logger_;
 };
 
 inline bool declination_deg(float latitude_deg,
