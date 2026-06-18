@@ -129,11 +129,12 @@ public:
         if (!initialized_) {
             for (int i = 0; i < 4; ++i) x_[i] = z[i];
             initialized_ = true;
+            predict_time_s_ = fix.timestamp_s;
             update_output(now_s);
             return true;
         }
 
-        kalman_update(z);
+        if (!kalman_update(z)) return false;
         replay_predictions(replay_count);
         trim_history(replay_count);
         update_output(now_s);
@@ -335,7 +336,11 @@ private:
 
         Real y[4];
         for (int i = 0; i < 4; ++i) y[i] = z[i] - x_[i];
-        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) x_[i] += k[i][j] * y[j];
+        for (int i = 0; i < 4; ++i) {
+            Real dx = Real(0);
+            for (int j = 0; j < 4; ++j) dx += k[i][j] * y[j];
+            x_[i] += dx;
+        }
 
         Real new_p[4][4];
         for (int i = 0; i < 4; ++i) {
