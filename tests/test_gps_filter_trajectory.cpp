@@ -162,6 +162,10 @@ int main() {
     const double pos_rms_m = std::sqrt(pos_err2_sum / count);
     const double speed_rms_kn = std::sqrt(speed_err2_sum / count);
 
+    std::cout << "gps filter trajectory RMS: pos_rms_m=" << pos_rms_m
+              << " speed_rms_kn=" << speed_rms_kn
+              << " samples=" << count << "\n";
+
     if (!(pos_rms_m < 25.0 && speed_rms_kn < 1.2)) {
         std::cerr << "gps filter trajectory RMS failed: pos_rms_m=" << pos_rms_m
                   << " speed_rms_kn=" << speed_rms_kn << "\n";
