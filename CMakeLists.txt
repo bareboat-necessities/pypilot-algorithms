@@ -5,6 +5,23 @@ option(PYPILOT_ALGORITHMS_BUILD_TESTS "Build tests" ON)
 option(PYPILOT_ALGORITHMS_BUILD_EXAMPLES "Build examples" ON)
 option(PYPILOT_ALGORITHMS_ENABLE_WMM "Build WMM geomagnetic model support" ON)
 set(PYPILOT_SYSLIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../pypilot-syslib/src" CACHE PATH "Path to pypilot-syslib src")
+set(PYPILOT_SYSLIB_REPO_PREFIX "https://github.com")
+set(PYPILOT_SYSLIB_REPO_PATH "bareboat-necessities/pypilot-syslib.git")
+set(PYPILOT_SYSLIB_REPO "${PYPILOT_SYSLIB_REPO_PREFIX}/${PYPILOT_SYSLIB_REPO_PATH}")
+
+if(NOT EXISTS "${PYPILOT_SYSLIB_DIR}/pypilot_syslib.hpp")
+  include(FetchContent)
+  FetchContent_Declare(
+    pypilot_syslib
+    GIT_REPOSITORY ${PYPILOT_SYSLIB_REPO}
+    GIT_TAG main
+  )
+  FetchContent_GetProperties(pypilot_syslib)
+  if(NOT pypilot_syslib_POPULATED)
+    FetchContent_Populate(pypilot_syslib)
+  endif()
+  set(PYPILOT_SYSLIB_DIR "${pypilot_syslib_SOURCE_DIR}/src")
+endif()
 
 add_library(pypilot_algorithms INTERFACE)
 target_include_directories(pypilot_algorithms INTERFACE
