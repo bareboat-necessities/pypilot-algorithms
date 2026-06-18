@@ -2,8 +2,8 @@
 #include <pypilot_algorithms.hpp>
 
 extern "C" {
-#include "../../../extras/wmm_tinier/wmm_core.c"
-#include "../../../extras/wmm_tinier/WMM_COF.c"
+#include <wmm_core.c>
+#include <WMM_COF.c>
 }
 
 #include <pypilot_algorithms/wmm.hpp>
