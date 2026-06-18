@@ -29,4 +29,5 @@ jobs:
         run: |
           arduino-cli compile --fqbn arduino:avr:mega \
             --libraries "$PWD" \
+            --build-property "compiler.cpp.extra_flags=-I$PWD/extras/wmm_tinier" \
             "$PWD/examples/arduino/WmmDeclinationExample"
