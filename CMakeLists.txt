@@ -4,9 +4,12 @@ project(pypilot_algorithms LANGUAGES C CXX)
 option(PYPILOT_ALGORITHMS_BUILD_TESTS "Build tests" ON)
 option(PYPILOT_ALGORITHMS_BUILD_EXAMPLES "Build examples" ON)
 option(PYPILOT_ALGORITHMS_ENABLE_WMM "Build WMM geomagnetic model support" ON)
+set(PYPILOT_SYSLIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../pypilot-syslib/src" CACHE PATH "Path to pypilot-syslib src")
 
 add_library(pypilot_algorithms INTERFACE)
-target_include_directories(pypilot_algorithms INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(pypilot_algorithms INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${PYPILOT_SYSLIB_DIR})
 target_compile_features(pypilot_algorithms INTERFACE cxx_std_11)
 
 if(PYPILOT_ALGORITHMS_ENABLE_WMM)
