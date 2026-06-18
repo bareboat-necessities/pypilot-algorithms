@@ -31,7 +31,7 @@ int main() {
     assert(near(filter.output().track_deg, 90.0, 1e-6));
 
     Prediction prediction;
-    prediction.time_s = 101.0;
+    prediction.time_s = 100.2;
     prediction.accel_x_m_s2 = 0.0;
     prediction.accel_y_m_s2 = 0.0;
     assert(filter.predict(prediction));
@@ -41,8 +41,8 @@ int main() {
 
     Fix moved = fix;
     moved.longitude_deg = -73.999;
-    moved.timestamp_s = 101.0;
-    assert(filter.update(moved, 101.7));
+    moved.timestamp_s = 100.2;
+    assert(filter.update(moved, 100.9));
     assert(filter.output().valid);
     assert(filter.output().longitude_deg > -74.0);
 
