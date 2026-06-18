@@ -24,8 +24,8 @@ int main() {
     assert(nearf(pypilot_true_wind_direction(5.0f, 10.0f, 0.0f), 0.0f));
     assert(nearf(pypilot_leeway_deg(10.0f, 5.0f), 2.0f));
     assert(pypilot_source_is_stale(1ULL, 0ULL));
-    assert(pypilot_source_is_stale(9000001ULL, 1ULL));
-    assert(!pypilot_source_is_stale(9000000ULL, 1ULL));
+    assert(pypilot_source_is_stale(8000002ULL, 1ULL));
+    assert(!pypilot_source_is_stale(8000001ULL, 1ULL));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, false), 20.0f));
     assert(nearf(pypilot_heading_error(100.0f, 80.0f, true), -20.0f));
     assert(nearf(pypilot_heading_error(200.0f, 80.0f, false), 30.0f));
