@@ -27,7 +27,7 @@ int main() {
     assert(filter.output().valid);
     assert(near(filter.output().latitude_deg, 40.0, 1e-9));
     assert(near(filter.output().longitude_deg, -74.0, 1e-9));
-    assert(near(filter.output().speed_kn, 10.0 * (1.94 / 1.944), 1e-6));
+    assert(near(filter.output().speed_kn, 10.0, 1e-6));
     assert(near(filter.output().track_deg, 90.0, 1e-6));
 
     Prediction prediction;
