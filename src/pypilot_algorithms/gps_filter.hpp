@@ -11,9 +11,30 @@
 #ifndef PYPILOT_ALGORITHMS_HAVE_SYSLIB
 namespace pypilot_syslib {
 class Logger {};
-enum class LogLevel { Info, Warn };
-enum class LogModule { Algorithms };
-enum class LogEvent { GpsFilterReset, GpsFilterPredictionReset };
+enum class LogLevel { Debug, Info, Warn, Error, Critical };
+enum class LogModule { Algorithms, DataModel, Sensors, PilotsLogic, GpsAdapter, SteeringSignaling, ServoProtocol, Nmea0183, SignalK, Runtime };
+enum class LogEvent {
+    SystemStartup,
+    SystemShutdown,
+    ConfigurationLoaded,
+    ConfigurationInvalid,
+    SourceSelected,
+    SourceRejected,
+    SourceTimedOut,
+    SensorSampleRejected,
+    GpsFixAccepted,
+    GpsFixRejected,
+    GpsFilterReset,
+    GpsFilterPredictionReset,
+    WmmEvaluationInvalid,
+    PilotModeChanged,
+    PilotCommandComputed,
+    ApbNavCommandAccepted,
+    ApbNavCommandRateLimited,
+    RudderCalibrationInvalid,
+    ServoCommandBlocked,
+    ServoFeedbackFault
+};
 static inline void log_if(Logger*, uint64_t, LogLevel, LogModule, LogEvent, const char*, int = 0, float = 0.0f) {}
 }
 #endif
