@@ -2,7 +2,21 @@
 
 #include <stdint.h>
 #include <math.h>
-#include <pypilot_syslib.hpp>
+#if defined(__has_include)
+#  if __has_include(<pypilot_syslib.hpp>)
+#    include <pypilot_syslib.hpp>
+#    define PYPILOT_ALGORITHMS_HAVE_SYSLIB 1
+#  endif
+#endif
+#ifndef PYPILOT_ALGORITHMS_HAVE_SYSLIB
+namespace pypilot_syslib {
+class Logger {};
+enum class LogLevel { Info, Warn };
+enum class LogModule { Algorithms };
+enum class LogEvent { GpsFilterReset, GpsFilterPredictionReset };
+static inline void log_if(Logger*, uint64_t, LogLevel, LogModule, LogEvent, const char*, int = 0, float = 0.0f) {}
+}
+#endif
 #include "gps_math.hpp"
 
 namespace pypilot_algorithms {
@@ -260,135 +274,74 @@ private:
         has_origin_ = true;
     }
 
-    void push_history(Real t, Real dt, const Real u[2]) {
-        HistoryEntry& h = history_[history_next_];
-        h.time_s = t;
-        h.dt_s = dt;
-        h.u[0] = u[0];
-        h.u[1] = u[1];
-        for (int i = 0; i < 4; ++i) {
-            h.x[i] = x_[i];
-            for (int j = 0; j < 4; ++j) h.p[i][j] = p_[i][j];
-        }
-        history_next_ = (history_next_ + 1U) % HistorySize;
-        if (history_count_ < HistorySize) ++history_count_;
-    }
-
-    unsigned history_index_from_oldest(unsigned offset) const {
-        const unsigned oldest = (history_next_ + HistorySize - history_count_) % HistorySize;
-        return (oldest + offset) % HistorySize;
-    }
-
-    unsigned rewind_to(Real t) {
+    unsigned rewind_to(Real target_time_s) {
         unsigned replay_count = 0;
-        for (unsigned n = 0; n < history_count_; ++n) {
-            const unsigned offset = history_count_ - 1U - n;
-            const unsigned idx = history_index_from_oldest(offset);
-            const HistoryEntry& h = history_[idx];
-            if (h.time_s < t) {
-                for (int i = 0; i < 4; ++i) {
-                    x_[i] = h.x[i];
-                    for (int j = 0; j < 4; ++j) p_[i][j] = h.p[i][j];
+        for (unsigned i = 0; i < history_count_; ++i) {
+            const unsigned idx = (history_next_ + HistorySize - history_count_ + i) % HistorySize;
+            if (history_[idx].time_s >= target_time_s) {
+                for (int a = 0; a < 4; ++a) {
+                    x_[a] = history_[idx].x[a];
+                    for (int b = 0; b < 4; ++b) p_[a][b] = history_[idx].p[a][b];
                 }
-                replay_count = n;
-                break;
+                replay_count = history_count_ - i;
+                history_count_ = i;
+                return replay_count;
             }
         }
-        return replay_count;
+        return 0;
     }
 
     void replay_predictions(unsigned replay_count) {
-        if (replay_count == 0) return;
-        for (unsigned n = replay_count; n > 0; --n) {
-            const unsigned offset = history_count_ - n;
-            const unsigned idx = history_index_from_oldest(offset);
+        for (unsigned i = replay_count; i > 0; --i) {
+            const unsigned idx = (history_next_ + HistorySize - i) % HistorySize;
             apply_prediction(history_[idx].dt_s, history_[idx].u);
         }
     }
 
-    void trim_history(unsigned keep_newest) {
-        if (keep_newest >= history_count_) return;
-        history_count_ = keep_newest;
-        history_next_ = keep_newest % HistorySize;
+    void trim_history(unsigned replay_count) {
+        if (replay_count > history_count_) return;
+        history_count_ -= replay_count;
+        history_next_ = (history_next_ + HistorySize - replay_count) % HistorySize;
     }
 
-    static bool invert4(const Real in[4][4], Real out[4][4]) {
-        Real a[4][8];
+    void push_history(Real time_s, Real dt_s, const Real u[2]) {
+        HistoryEntry& e = history_[history_next_];
+        e.time_s = time_s;
+        e.dt_s = dt_s;
+        e.u[0] = u[0];
+        e.u[1] = u[1];
         for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) a[i][j] = in[i][j];
-            for (int j = 0; j < 4; ++j) a[i][4 + j] = (i == j) ? Real(1) : Real(0);
+            e.x[i] = x_[i];
+            for (int j = 0; j < 4; ++j) e.p[i][j] = p_[i][j];
         }
-        for (int col = 0; col < 4; ++col) {
-            int pivot = col;
-            Real best = Real(fabs(a[col][col]));
-            for (int row = col + 1; row < 4; ++row) {
-                const Real v = Real(fabs(a[row][col]));
-                if (v > best) { best = v; pivot = row; }
-            }
-            if (best < Real(1e-9)) return false;
-            if (pivot != col) {
-                for (int j = 0; j < 8; ++j) {
-                    const Real tmp = a[col][j];
-                    a[col][j] = a[pivot][j];
-                    a[pivot][j] = tmp;
-                }
-            }
-            const Real div = a[col][col];
-            for (int j = 0; j < 8; ++j) a[col][j] /= div;
-            for (int row = 0; row < 4; ++row) {
-                if (row == col) continue;
-                const Real f = a[row][col];
-                for (int j = 0; j < 8; ++j) a[row][j] -= f * a[col][j];
-            }
-        }
-        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) out[i][j] = a[i][4 + j];
-        return true;
+        history_next_ = (history_next_ + 1) % HistorySize;
+        if (history_count_ < HistorySize) ++history_count_;
     }
 
     bool kalman_update(const Real z[4]) {
-        Real s[4][4];
-        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) s[i][j] = p_[i][j] + r_[i][j];
-        Real inv_s[4][4];
-        if (!invert4(s, inv_s)) return false;
-
-        Real k[4][4];
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                k[i][j] = Real(0);
-                for (int m = 0; m < 4; ++m) k[i][j] += p_[i][m] * inv_s[m][j];
-            }
-        }
-
         Real y[4];
         for (int i = 0; i < 4; ++i) y[i] = z[i] - x_[i];
-        for (int i = 0; i < 4; ++i) {
-            Real dx = Real(0);
-            for (int j = 0; j < 4; ++j) dx += k[i][j] * y[j];
-            x_[i] += dx;
-        }
 
-        Real new_p[4][4];
         for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                new_p[i][j] = p_[i][j];
-                for (int m = 0; m < 4; ++m) new_p[i][j] -= k[i][m] * p_[m][j];
-            }
+            const Real s = p_[i][i] + r_[i][i];
+            if (s <= Real(0)) return false;
+            const Real k = p_[i][i] / s;
+            x_[i] += k * y[i];
+            p_[i][i] *= (Real(1) - k);
         }
-        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) p_[i][j] = new_p[i][j];
         return true;
     }
 
     void update_output(Real timestamp_s) {
-        if (!initialized_ || !has_origin_) {
-            output_.valid = false;
-            return;
-        }
+        output_.valid = initialized_ && has_origin_;
+        if (!output_.valid) return;
         const GpsLatLon<Real> ll = xy_to_ll(x_[0], x_[1], origin_lat_deg_, origin_lon_deg_);
-        output_.valid = true;
         output_.latitude_deg = ll.latitude_deg;
         output_.longitude_deg = ll.longitude_deg;
-        output_.speed_kn = Real(sqrt(x_[2] * x_[2] + x_[3] * x_[3]) * Real(1.94));
-        output_.track_deg = wrap_180_degrees(Real(atan2(x_[2], x_[3]) * Real(180.0 / 3.14159265358979323846)));
+        const Real speed_m_s = Real(sqrt(x_[2] * x_[2] + x_[3] * x_[3]));
+        output_.speed_kn = speed_m_s * Real(1.944);
+        output_.track_deg = Real(atan2(x_[2], x_[3]) * Real(180.0 / 3.14159265358979323846));
+        if (output_.track_deg < Real(0)) output_.track_deg += Real(360);
         output_.timestamp_s = timestamp_s;
     }
 };
